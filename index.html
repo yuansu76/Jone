@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>答案</title>
+    <script src="index.js"></script>
+    <link rel="stylesheet" href="index.css" />
+    <button id="test" style="position:fixed;right:0;bottom:0">回到顶部</button>
+    <script>
+    test.onclick = function(){
+        document.body.scrollTop = document.documentElement.scrollTop = 0;
+    }
+    </script>
+    <style>
+            nav ul
+        {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            float:left;
+        }
+
+        ul li
+        {
+            list-style:none;
+            float:left;
+        }
+
+        a:link,a:visited
+        {
+            display:block;
+            font-weight:bold;
+            color:rgb(0, 0, 0);
+            background-color:rgb(221, 239, 253);
+            width:190px;
+            text-align:center;
+            padding:7px;
+            text-decoration:none;
+        }
+
+        a:hover, a:active
+        {
+            background-color: rgb(160, 228, 240);
+        }
+
+    </style>
+
+
+</head>
+<body>
+
+
+    <div class="navbar">
+        <!-- 复选框的id属性值和label元素的for属性值相同的话 那么就可以通过label元素选中复选框 -->
+        <input type="checkbox" id="nav" /><label for="nav"></label>
+        <ul>
+            <li><a href="#sx">数据结构实训</a></li>
+            <li><a href="#sc">双创作业</a></li>
+        </ul>
+    </div><br /><br /><br /><br />
+    <h1><center>欢迎来到我的博客</center></h1>
+    <div>
+
+
+        <br/><br/><br/><br/>
+        <p>
+            <h3 id="sx"><center>数据结构实训——压缩解压</center></h3><br/>
+            <h4>指导目录</h4>
+            <nav>
+                <ul class="nav">
+                <li><a href="#xz">压缩原理</a></li>
+                <li><a href="#dc">等长编码</a></li>
+                <li><a href="#gy">关于缓冲区</a></li>
+                </ul>
+        </nav>
+        <br/><br/>
+        <h4>代码目录</h4>
+            <nav>
+                    <ul class="nav">
+                    <li><a href="#qj">1.定义全局变量</a></li>
+                    <li><a href="#csh">2.初始化哈夫曼树</a></li>
+                    <li><a href="#dq">3.读取文件信息</a></li>
+                    <li><a href="#npx">4.按权重逆序排序</a></li>
+                    <li><a href="#hfms">5.构造哈夫曼树</a></li>
+                    <li><a href="#hfmbm">6.构造哈夫曼编码</a></li>
+                    <li><a href="#hqqh">7.获取前缀名和后缀名</a></li>
+                    <li><a href="#hcq">8.使用缓冲区进行读写</a></li>
+                    <li><a href="#czcode">9.获取字符对应哈夫曼码</a></li>
+                    <li><a href="#ys">10.压缩文件函数</a></li>
+                    <li><a href="#jy">11.解压文件函数</a></li>
+                    <li><a href="#zhs">12.输出函数</a></li>
+                    <li><a href="#ui">13.主函数及简易UI</a></li>
+                    </ul>
+            </nav><br/><br/>
+
+            <div>
+                <h4 id="xz">压缩原理</h4>
+                <img src="img/1.png" width="900" /><br /><br />
+            </div>
+
+            <div>
+                <h4 id="dc">等长编码</h4><br />
+                <img src="img/2.png" width="900" /><br /><br />
+            </div>
+
+            <div>
+                <h4 id="gy">关于缓冲区</h4><br />
+                <img src="img/3.png" width="900" /><br /><br />
+                <img src="img/4.png" width="900" /><br /><br />
+                <img src="img/5.png" width="900" /><br /><br />
+            </div>
+
+
+            <h4 id="qj">1.定义全局变量</h4>
+
+            <textarea cols="80" name="content" rows="16" id="content">
+int bytes_count = 0;		//哈夫曼树的叶子节点数
+long long file_length = 0;	//保存文件的字节数
+const int FILENAMEMAX = 128;//文件名（带路径）长度限高127
+const int SUFFIXNAMEMAX = 10;//文件后缀名长度不超过9个字节
+char source_fillename[FILENAMEMAX] = "123.txt";//源文件名
+char compress_filename[FILENAMEMAX] = "test.buf";//压缩文件名字
+char decompress_filename[FILENAMEMAX] = "detest";//解压文件名字
+char prefix_filename[128];//文件前缀名
+char suffix_filename[128];//文件后缀名
+const int BUFF_MAXSIZE = 104 * 1024;
+char buff[BUFF_MAXSIZE] = "";
+char buff_string[BUFF_MAXSIZE / 8] = "";//压缩文件写入缓冲区大小
+const int BLOCK_MAXSIZE = 1024 * 1024;
+char block[BLOCK_MAXSIZE] = "";
+int block_current = 0;
+            </textarea>
+            <input type=button value="一键复制" onclick="jsCopy1()">
+
+            <h4 id="csh">2.初始化哈夫曼树</h4>
+
+            <img src="img/6.png" width="900" /><br /><br />
+            <textarea cols="80" name="content1" rows="35" id="content1">
+struct HaffNode
+{
+    unsigned char byte;		//节点数据
+    long long weight;		//权值
+    int parent;				//双亲结点下标
+    int leftChild;			//左孩子下标
+    int rightChild;			//右孩子下标
+    char code[256];			//哈夫曼编码
+    int code_len;			//编码长度
+};
+struct weight {
+    int byte;
+    int value;
+};
+weight weights[256];
+HaffNode HaffTree[511];
+//初始化
+void initHaffTree()
+{
+    for (int i = 0; i <= 511; i++)
+    {
+        HaffTree[i].byte = i;
+        HaffTree[i].weight = 0;
+        HaffTree[i].leftChild = -1;
+        HaffTree[i].rightChild = -1;
+        HaffTree[i].parent = -1;
+        for (int j = 0; j <= 256; j++)
+        {
+            HaffTree[i].code[j] = NULL;
+        }
+    }
+}
+            </textarea>
+            <input type=button value="一键复制" onclick="jsCopy2()">
+
+
+            <h4 id="dq">3.读取文件信息</h4>
+
+            <textarea cols="80" name="content2" rows="40" id="content2">
+void Statistics(char fleName[])
+{
+    for (int i = 0; i < 256; i++) {
+        weights[i].byte = i;
+        weights[i].value = 0;
+    }
+
+    //fopen以只读打开二进制文件；
+    FILE * ifp = fopen(fleName, "rb");
+    if (ifp == NULL) //判断文件是否存在
+    {
+        cout << fleName << "文件不存在";
+        exit(404);
+    }
+    unsigned char c;
+    file_length = 0;
+    fread(&c, 1, 1, ifp); //从文件中读取一个字节到 c
+    while (!feof(ifp))	//feof测试文件是否结束
+    {
+        HaffTree[c].weight++;
+        file_length++;
+        fread(&c, 1, 1, ifp);
+        if (file_length == 1)
+        {
+            cout << "读取成功 " << file_length << "次 ";
+        }
+        else
+        {
+            cout << file_length << "次 ";
+        }
+
+    }
+    cout << "完成" << endl;
+    fclose(ifp);
+    //统计一下权值大于0的结点个数 bytes_count（全局变量）
+    bytes_count = 0;
+    for (int i = 0; i < 256; i++) {
+        if (HaffTree[i].weight > 0)
+            bytes_count++;		//叶子节点数++（为后面创建哈夫曼树做准备）
+    }
+    cout << "叶子节点数 = " <<bytes_count << endl;
+    return;
+}</textarea><input type=button value="一键复制" onclick="jsCopy3()">
+            
+
+            <h4 id="npx">4.按权重逆序排序</h4>
+
+            <textarea cols="80" name="content3" rows="10" id="content3">
+bool compare(HaffNode a, HaffNode b) 
+{
+    return a.weight > b.weight;  //降序规则
+}
+
+void sortweights(HaffNode HaffTree[], int bytescount = 256) 
+{
+    sort(HaffTree, HaffTree + bytescount - 1, compare);//调用上述的函数（排序数组的起始地址，下一位地址，排序规则调用函数）
+}
+            </textarea>
+            <input type=button value="一键复制" onclick="jsCopy4()">
+
+
+            <h4 id="hfms">5.构造哈夫曼树</h4>
+
+            <textarea cols="80" name="content4" rows="20" id="content4">
+void creatHaffTree() {
+    cout << "哈夫曼中叶子结点的个数为" << bytes_count << endl;
+    int min1 = 0, min2 = 1;			//初始化weight值最小的两个子树的根结点位置
+    int current = bytes_count;		//current保存-叶子节点数
+
+    for (int i = 1; i < bytes_count; i++) { //经过bytes_count -1 次树的合并。
+        //找出 min1 和min2（parent=-1&&weight->min）
+
+        //找min1
+        min1 = current - 1;
+        for (int j = current - 1; j >= 0; j--)	//遍历叶子节点数的次数
+        {
+            //&&后比较最小值，若最小则赋值给min1，再回for比较下一个。
+            if (HaffTree[j].parent == -1 && HaffTree[j].weight <= HaffTree[min1].weight)
+                min1 = j;
+        }
+        //找min2
+        min2 = -1;
+        for (int j = current - 1; j >= 0; j--)	//遍历叶子节点数的次数
+        {
+            if (min2 == -1)//min2 未初始化 
+            { 
+                if (HaffTree[j].parent == -1 && j != min1)  //初始化min2 ，避开min1 ->（j!=min1）
+                    min2 = j;
+            }
+            else //min2已经被始化 
+            {
+                if (j != min1 && HaffTree[j].parent == -1 && HaffTree[j].weight <= HaffTree[min2].weight)
+                    min2 = j;
+            }
+        }
+
+        // 把min1 和min2 两个位置上的子树进行合并；
+        HaffTree[current].weight = HaffTree[min1].weight + HaffTree[min2].weight;
+        HaffTree[current].leftChild = min1;
+        HaffTree[current].rightChild = min2;
+        HaffTree[min1].parent = current;
+        HaffTree[min2].parent = current;
+        current++;
+    }
+}
+            </textarea>
+            <input type=button value="一键复制" onclick="jsCopy5()">
+
+            <h4 id="hfmbm">6.构造哈夫曼编码</h4>
+
+            <textarea cols="80" name="content5" rows="25" id="content5">
+void creatHaffCode() {
+    int root = bytes_count * 2 - 2;//正确
+    HaffTree[root].code[0] = '\0';
+    //	cout<<"根结点的编码"<<HaffTree[root].code <<endl; 
+    for (int i = root - 1; i >= 0; i--) {
+        //cout<<"第"<<i<<"个结点的编码原编码是"<<HaffTree[HaffTree[i].parent].code <<endl; 
+
+        strcpy(HaffTree[i].code, HaffTree[HaffTree[i].parent].code);
+
+        if (HaffTree[HaffTree[i].parent].rightChild == i) { //若第i个结点，是其双亲的右孩子结点，则在双亲的编码后再接上‘1’ 
+            strcat(HaffTree[i].code, "1");
+        }
+        else { //若第i个结点，是其双亲的左孩子结点，则在双亲的编码后再接上‘0’ 	   	  
+            strcat(HaffTree[i].code, "0");
+        }
+        //cout<<"第"<<i<<"个结点的编码是"<<HaffTree[i].code <<endl; 
+
+        HaffTree[i].code_len = strlen(HaffTree[i].code);
+    }
+}
+            </textarea>
+            <input type=button value="一键复制" onclick="jsCopy6()">
+        
+            <h5 id="hqqh">7.获取前缀名和后缀名</h5>
+
+            <textarea cols="80" name="content6" rows="20" id="content6">
+void getFileNameFromPath(char * prefix_filename, char * suffix_filename, const char * filepath_name) {
+    int lastSplit = -1;
+    // 相对路径：lastSplit指向最优一个 '/'或'\'符号  
+    char file_name[128];//前缀名.后缀名 
+    for (int i = 0; i < strlen(filepath_name); i++) {
+        if (filepath_name[i] == '/' || filepath_name[i] == '\\') {
+            lastSplit = i;
+        }
+    }
+
+    strcpy(file_name, filepath_name + lastSplit + 1); // 绝对路径：去除路径，只剩下文件名
+    lastSplit = -1;
+    //lastSplit指向最后一个'.'符号 
+    for (int i = 0; i < strlen(file_name); i++) {
+        if (file_name[i] == '.') {
+            lastSplit = i;
+        }
+    }
+    strcpy(suffix_filename, file_name + lastSplit + 1); // 取后缀名
+    strncpy(prefix_filename, file_name, strlen(file_name) - strlen(suffix_filename) - 1);//取前缀名
+}
+            </textarea>
+            <input type=button value="一键复制" onclick="jsCopy7()">
+
+            <h4 id="hcq">8.使用缓冲区进行读写</h4>
+
+            <textarea cols="80" name="content7" rows="20" id="content7">
+void flushBuffer(FILE * fp) {
+    strcpy(buff_string, "");
+
+    unsigned char tempchar = 0;
+    int byte_num = strlen(buff) / 8;//可以写入byte_num个字节
+    int i;
+
+    for (i = 0; i < byte_num; i++) { //连续读8位，构造第i个字节 
+        tempchar = 0;
+        for (int j = 0; j < 8; j++) {
+
+            if (buff[i * 8 + j] == '1')
+                tempchar += pow(2, 7 - j);
+        }
+        // cout<<"tempchar= "<<(int)tempchar<<endl; 
+
+        buff_string[i] = tempchar;
+    }
+    buff_string[i] = '\0';
+    fwrite(buff_string, 1, byte_num, fp); //批量写入文件；
+    strcpy(buff, buff + byte_num * 8);//把buff中已写入文件的部分剪掉；
+
+}
+            </textarea>
+            <input type=button value="一键复制" onclick="jsCopy8()">
+
+            <h4 id="czcode">9.查找字符对应哈夫曼编码</h4>
+
+            <textarea cols="80" name="content8" rows="8" id="content8">
+char* getByteEncode(unsigned char c) {
+    for (int j = 0; j < bytes_count; j++) {
+        if (HaffTree[j].byte == c) {
+            return HaffTree[j].code;
+        }
+    }
+}
+            </textarea>
+            <input type=button value="一键复制" onclick="jsCopy9()">
+
+            <h4 id="ys">10.压缩文件函数</h4>
+
+            <textarea cols="80" name="content9" rows="70" id="content9">
+void writeCompressFile() {
+    //读入文件并判断是否存在
+    FILE * ofp = fopen(compress_filename, "wb");
+    if (ofp == NULL) {//判断文件是否存在	
+        cout << compress_filename << "文件不存在或被占用!\r\n";
+        exit(4);
+    }
+
+    //写入头文件 :
+    //文件类型长度（char），文件类型(char [SUFFIXNAMEMAX] )，
+    //文件长度(long long)，被编码的结点数(int)，字节b1，
+    //权重w1，字节b2，权重b2，。。。。字节bn,权重wn
+    fprintf(ofp, "%d,", strlen(suffix_filename));
+    fprintf(ofp, "%s,", suffix_filename);
+    fprintf(ofp, "%lld,", file_length);
+    fprintf(ofp, "%d,", bytes_count);
+    //写入个字节的频度，解压时，可根据该频度值，还原哈夫曼编码    
+    for (int i = 0; i < bytes_count; i++) {
+        fprintf(ofp, "%c,", HaffTree[i].byte);
+        fprintf(ofp, "%lld,", HaffTree[i].weight);
+    }
+
+    //利用buff缓冲区，把源文件的各个字节，进行转码。（转码规则：哈夫曼编码）
+    FILE * ifp = fopen(source_fillename, "rb");
+    unsigned char c;
+    if (ifp == NULL) {//判断文件是否存在	
+        cout << source_fillename << "文件不存在或被占用!\r\n";
+        exit(4);
+    }
+
+    //将转换好的二进制码 写入缓冲区
+    strcpy(buff, "");  //清空哈夫曼编码缓冲区 
+    c = fgetc(ifp); //从文件中读取一个字节到 c
+    while (!feof(ifp)) //文件没结束
+    {
+        if (BUFF_MAXSIZE - strlen(buff) > 256) {//如果缓冲区中剩余的位置超过256，则可以至少再放入一个字符
+            strcat(buff, getByteEncode(c));
+            c = fgetc(ifp); //从文件中读取一个字节到 c
+        }
+        else {//缓冲区快要满了，先把缓冲区中仅可能多的内容写入文件中。
+            flushBuffer(ofp);
+            //  cout<<"第一处"<<endl; 
+        }
+        //	       c=fgetc(ifp); //错误，少写入一个字节 
+
+    }
+    //先写入buffer缓冲区↑
+
+    //把缓冲区中剩余的字符写入文件
+
+    //再把缓冲区中剩余的字符写入文件↓
+    flushBuffer(ofp);
+    //    cout<<"第二处"<<endl; 
+
+    //最后一个字符未处理	
+    //（注意：若缓冲区中剩余的字符数量不是8的倍数时，即最后一个字节是不完整的，需要在低位进行补0，再写入）
+    if (strlen(buff) > 0) {
+
+        strcat(buff, "0000000");
+        // cout<<"补0之后 buff="<<buff<<endl;
+        flushBuffer(ofp);
+        strcpy(buff, "");
+
+    }
+    fclose(ofp);
+    fclose(ifp);
+}
+            </textarea>
+            <input type=button value="一键复制" onclick="jsCopy10()">
+
+            <h4 id="jy">11.解压文件函数</h4>
+            <textarea cols="80" name="content10" rows="70" id="content10">
+void deCompressFile() 
+{
+    // cout<<"输入压缩文件名（建议后缀名为.buf"<<endl;
+    // cin>> compress_filename;
+    //打开压缩文件  
+    FILE * ifp = fopen(compress_filename, "rb");
+    if (ifp == NULL) //判断文件是否存在
+    {
+        cout << compress_filename << "压缩文件不存在或被占用!\r\n";
+        exit(4);
+    }
+
+    //开始读文件头部 ：
+    //文件类型长度（char），文件类型(char [SUFFIXNAMEMAX] )，
+    //文件长度(long long)，被编码的结点数(int)，字节b1，
+    //权重w1，字节b2，权重b2，。。。。字节bn,权重wn
+    int suffix_filename_len;
+    fscanf(ifp, "%d,", &suffix_filename_len);  //读源文件的后缀名 
+    fread(suffix_filename, 1, suffix_filename_len, ifp); //把源文件的后缀名写入压缩文件（解压时还原源文件的类型） 
+    fscanf(ifp, ",%ld,", &file_length);  //写入源文件的总字节数 
+    fscanf(ifp, "%d,", &bytes_count);  //写入源文件中被编码的字节总数 （小于256） 
+    initHaffTree();//初始化哈夫曼树存储结构 
+
+//读出字节频度，再还原哈夫曼树
+    for (int i = 0; i < bytes_count; i++) {
+        fscanf(ifp, "%c,", &HaffTree[i].byte);
+        fscanf(ifp, "%lld,", &HaffTree[i].weight);
+    }
+    char tempc;
+
+    creatHaffTree();//构造哈夫曼树 
+    printtree(10);
+
+    //  开始读出正文，并进行解码 
+        //初始化所有全局变量 
+    int buff_current = 0;  // 缓冲区游标0~BUFF_MAXSIZE 
+    int byte_current = 0; // 字节游标 0~7; 
+    int root = bytes_count * 2 - 2; //根结点 
+    int tree_current = root; //树结点游标 
+    int block_current = 0;
+    strcpy(buff, "");//清空读缓冲区 
+    strcpy(block, "");//清空写缓冲区 
+    char c;
+    int test;
+
+    //打开解压文件，准备写入 
+    strcat(decompress_filename, ".");
+    strcat(decompress_filename, suffix_filename);
+    FILE * ofp = fopen(decompress_filename, "wb");
+    if (ofp == NULL) {//判断文件是否存在
+        cout << decompress_filename << "解压文件不存在或被占用!\r\n";
+        exit(4);
+    }
+
+
+    fread(buff, 1, BUFF_MAXSIZE - 1, ifp); //装满缓冲区 
+    cout << buff;
+
+    int refile_length = 0;//已被解压出来的字节总数 
+
+    while (refile_length < file_length) //文件没结束
+    {
+        if (block_current > BLOCK_MAXSIZE - 1) {	//缓冲区已满，先写入文件	 
+            fwrite(block, 1, block_current, ofp);//  此处有问题 
+            block_current = 0;
+        }
+        if (HaffTree[tree_current].leftChild == -1) { //叶子节点，则查出该节点，并把该字节写入解压文件中
+            c = HaffTree[tree_current].byte;//读a,b,c,d……
+            block[block_current] = c;//写入
+            block_current++;
+            block[block_current] = '\0';
+
+            //strcat(block,);
+            tree_current = root; //游标回到根结点 
+            refile_length++;//被解压字节数加1 
+        }
+        else { //度缓冲区内的下一位，若是0，则转向左孩子，若是1，则转向右孩子 
+
+            if ((buff[buff_current] >> (7 - byte_current)) & 1 == 1) {
+
+                tree_current = HaffTree[tree_current].rightChild;
+            }
+            else {
+                tree_current = HaffTree[tree_current].leftChild;
+            }
+
+            if (byte_current < 7) { //在一个字节之内，buff_current不变，byte_current加1
+                byte_current++;
+            }
+            else {  //一个字节刚结束，需要知道下一个字节
+                byte_current = 0;
+                buff_current++;
+                if (buff_current >= BUFF_MAXSIZE - 1) {//缓冲区的结点已经读完了，读入下一批
+
+                    fread(buff, 1, BUFF_MAXSIZE - 1, ifp); //装满缓冲区
+                    buff_current = 0;
+                }
+            }
+        }
+    }
+    fwrite(block, 1, block_current, ofp);//缓冲区中剩余的字符     
+    fclose(ifp);
+    fclose(ofp);
+}
+            </textarea> 
+            <input type=button value="一键复制" onclick="jsCopy11()"><br />
+
+
+
+            <h4 id="zhs">12.输出函数</h4>
+
+            <textarea cols="80" name="content11" rows="8" id="content11">
+void printtree(int n = 256) {
+    cout << "哈夫曼树的存储结构如下所示：" << endl;
+    cout << " i         byte   weight      lchild    rchild   parrent      code" << endl;
+    int i = 0;
+    for (i = 0; i < n; i++) {
+        printf(" %d \t    %x\t    %lld    \t %d    \t %d\t   %d    \t", i, (int)HaffTree[i].byte, HaffTree[i].weight, HaffTree[i].leftChild, HaffTree[i].rightChild, HaffTree[i].parent);
+        cout << HaffTree[i].code << endl;
+    }
+}
+            </textarea>
+
+
+            <input type=button value="一键复制" onclick="jsCopy12()">
+
+            <h4 id="ui">13.主函数及简易UI</h4>
+
+            <textarea cols="80" name="content12" rows="50" id="content12">
+int  main()
+{
+    while (1)s
+    {
+
+        time_t beforeTime, afterTime;
+        cout << "========== Huffman 文件压缩与解压 ==========" << endl;
+        cout << "========== 1、压缩文件 =============" << endl;
+        cout << "========== 2、解压文件 =============" << endl;
+        cout << "========== 3、退出程序 =============" << endl;
+        cout << "请选择您要进行的操作:";
+        int choose;
+        cin >> choose;
+        switch (choose)
+        {
+        case 1: {
+            cout << "========== Huffman 文件压缩 ==========" << endl;
+            cout << "请输入源文件名:";
+            cin >> source_fillename;
+            cout << "请输入压缩后文件名（不含后缀名）:";
+            cin >> compress_filename;
+            compressFile();
+            printf("源文件长度=%d", file_length);
+            break;
+        }
+        case 2: {
+            cout << "========== Huffman 文件解压 ==========" << endl;
+            cout << "请输入压缩文件名（包括后缀名）:";
+            cin >> compress_filename;
+            cout << "请输入解压后的文件名（不含后缀名）";
+            cin >> decompress_filename;
+            ////获取当前时间
+
+            time(&beforeTime);
+            deCompressFile();
+            time(&afterTime);
+            cout << "解压时间为：" << (int)(afterTime - beforeTime) << endl;
+            break;
+        }
+        case 3: {
+            cout << "程序结束" << endl;
+
+            return 0;
+        }
+
+        default: {
+            cout << "请正确输入您的选择！";
+            break;
+        }
+        }
+    }
+    compressFile();//压缩
+    deCompressFile();//解压
+    return 0;
+}
+            </textarea>
+            <input type=button value="一键复制" onclick="jsCopy14()"><br /><br /><br /><br />
+            实训打包文件下载：<a href="数据结构与算法实践参考(学生).rar">点我下载</a><br /><br />
+
+    </div><br /><br /><br /><br /><br /><br />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <p>
+        <h3 id="sc"><center>双创提交方案</center></h3>
+        <center><a href="https://cy.ncss.cn/" target="_blank">登录全国大学生创业服务网</a></center><br />
+        <center><img src="2.jpg" title="我的信息界面" /></center>
+        <strong>注意</strong>：每个人都是要以自己为<strong>负责人</strong>参赛！
+        进去之后填写资料<strong>报名成功</strong>后要<strong>截图</strong>！<br />
+        <strong>例如</strong>:课程分组ABCD四人，当A为项目负责人时，BCD为组员，当B为项目
+        负责人时，ACD为组员，以此类推），并将报名成功的那页截图附在商业计划书上
+        最后提交学习通，并互评。<br /><br />
+        双创打包文件下载：<a href="双创.rar">点我下载</a><br /><br /><br /><br />
+    </p>
+</body>
+</html>
